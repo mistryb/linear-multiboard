@@ -1,0 +1,1 @@
+{"root":["./src/App.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/IssueBoard.tsx","./src/components/IssueCard.tsx","./src/components/LastRefreshed.tsx","./src/components/SetupScreen.tsx","./src/hooks/useAllIssues.ts","./src/linear/api.ts","./src/linear/cache.ts","./src/linear/config.ts","./src/linear/types.ts","./vite.config.ts"],"version":"5.9.3"}
