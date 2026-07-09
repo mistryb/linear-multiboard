@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <radialGradient id="bpglow" cx="50%" cy="0%" r="60%">
+      <stop offset="0" stop-color="#5e6ad2" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#5e6ad2" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- window frame -->
+  <rect width="1200" height="700" rx="16" fill="#0e0e11" stroke="#2a2a31"/>
+  <rect width="1200" height="700" rx="16" fill="url(#bpglow)"/>
+
+  <!-- top bar -->
+  <g>
+    <rect x="1" y="1" width="1198" height="52" rx="15" fill="#17171b"/>
+    <rect x="1" y="38" width="1198" height="15" fill="#17171b"/>
+    <line x1="0" y1="53" x2="1200" y2="53" stroke="#2a2a31"/>
+    <circle cx="28" cy="27" r="6" fill="#ff5f57"/><circle cx="48" cy="27" r="6" fill="#febc2e"/><circle cx="68" cy="27" r="6" fill="#28c840"/>
+    <!-- brand -->
+    <rect x="98" y="16" width="22" height="22" rx="6" fill="#5e6ad2"/>
+    <rect x="103" y="21" width="5" height="12" rx="1.5" fill="#fff"/><rect x="110" y="21" width="5" height="7" rx="1.5" fill="#fff" opacity="0.7"/>
+    <text x="130" y="32" font-size="14" font-weight="600" fill="#e6e6ea">Linear MultiBoard</text>
+    <!-- tabs -->
+    <g font-size="12.5" font-weight="600" transform="translate(300,15)">
+      <rect width="86" height="24" rx="7" fill="#1b1b20" stroke="#2a2a31"/><rect x="9" y="7" width="10" height="10" rx="3" fill="#5e6ad2"/><text x="25" y="16" fill="#e6e6ea">Acme</text>
+      <g transform="translate(94,0)"><rect width="94" height="24" rx="7" fill="#141418"/><rect x="9" y="7" width="10" height="10" rx="3" fill="#e0645e"/><text x="25" y="16" fill="#9a9aa6">Beta Co</text></g>
+      <g transform="translate(196,0)"><rect width="86" height="24" rx="7" fill="#141418"/><rect x="9" y="7" width="10" height="10" rx="3" fill="#3fb950"/><text x="25" y="16" fill="#9a9aa6">Studio</text></g>
+      <g transform="translate(290,0)"><rect width="118" height="24" rx="7" fill="#141418"/><rect x="9" y="7" width="10" height="10" rx="3" fill="#d99a3f"/><text x="25" y="16" fill="#9a9aa6">Side Project</text></g>
+      <g transform="translate(420,0)"><rect width="104" height="24" rx="7" fill="#1b1b20" stroke="#5e6ad2"/><rect x="10" y="9" width="6" height="6" rx="3" fill="#5e6ad2"/><text x="22" y="16" fill="#c7ccff">Combined</text></g>
+    </g>
+    <!-- refresh button -->
+    <g transform="translate(1096,14)"><rect width="82" height="26" rx="8" fill="#1b1b20" stroke="#2a2a31"/><text x="17" y="17" font-size="12" font-weight="600" fill="#e6e6ea">Refresh</text><path d="M9 9 a4 4 0 1 0 1 -3" fill="none" stroke="#9a9aa6" stroke-width="1.5"/></g>
+  </g>
+
+  <!-- ===== COLUMNS ===== -->
+  <!-- column geometry: x positions 24, 258, 492, 726, 960 ; width 216 -->
+  <g transform="translate(0,74)">
+
+    <!-- ============ TRIAGE ============ -->
+    <g transform="translate(24,0)">
+      <rect width="216" height="596" rx="11" fill="#1b1b20" stroke="#2a2a31"/>
+      <circle cx="18" cy="24" r="5" fill="#9a9aa6"/><text x="32" y="28" font-size="13" font-weight="700" fill="#e6e6ea">Triage</text><text x="196" y="28" font-size="12" font-weight="600" fill="#6a6a76" text-anchor="end">2</text>
+
+      <!-- card -->
+      <g transform="translate(10,42)">
+        <rect width="196" height="98" rx="8" fill="#212127" stroke="#2a2a31"/>
+        <circle cx="14" cy="18" r="3" fill="#5e6ad2"/><text x="22" y="21" font-size="9.5" font-weight="700" fill="#9a9aa6" letter-spacing="0.5">ACME</text>
+        <rect x="140" y="10" width="46" height="16" rx="5" fill="#1b1b20" stroke="#2a2a31"/><text x="163" y="21" font-size="10" font-weight="700" fill="#e6e6ea" text-anchor="middle">ACM-142</text>
+        <text x="14" y="45" font-size="12.5" fill="#e6e6ea">Onboarding flow drops</text>
+        <text x="14" y="62" font-size="12.5" fill="#e6e6ea">on step 3</text>
+        <rect x="14" y="72" width="52" height="17" rx="5" fill="#4c1d1d"/><text x="40" y="84" font-size="10" font-weight="600" fill="#ff8f8f" text-anchor="middle">Urgent</text>
+        <circle cx="176" cy="80" r="10" fill="#5e6ad2"/><text x="176" y="84" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">JD</text>
+      </g>
+
+      <g transform="translate(10,150)">
+        <rect width="196" height="90" rx="8" fill="#212127" stroke="#2a2a31"/>
+        <circle cx="14" cy="18" r="3" fill="#3fb950"/><text x="22" y="21" font-size="9.5" font-weight="700" fill="#9a9aa6" letter-spacing="0.5">STUDIO</text>
+        <rect x="146" y="10" width="40" height="16" rx="5" fill="#1b1b20" stroke="#2a2a31"/><text x="166" y="21" font-size="10" font-weight="700" fill="#e6e6ea" text-anchor="middle">STU-88</text>
+        <text x="14" y="45" font-size="12.5" fill="#e6e6ea">Export PDF renders blank</text>
+        <rect x="14" y="60" width="40" height="17" rx="5" fill="#4a2f12"/><text x="34" y="72" font-size="10" font-weight="600" fill="#ffb774" text-anchor="middle">High</text>
+        <circle cx="176" cy="68" r="10" fill="#3fb950"/><text x="176" y="72" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">RK</text>
+      </g>
+    </g>
+
+    <!-- ============ BACKLOG ============ -->
+    <g transform="translate(258,0)">
+      <rect width="216" height="596" rx="11" fill="#1b1b20" stroke="#2a2a31"/>
+      <circle cx="18" cy="24" r="5" fill="#8a8f98"/><text x="32" y="28" font-size="13" font-weight="700" fill="#e6e6ea">Backlog</text><text x="196" y="28" font-size="12" font-weight="600" fill="#6a6a76" text-anchor="end">2</text>
+
+      <g transform="translate(10,42)">
+        <rect width="196" height="90" rx="8" fill="#212127" stroke="#2a2a31"/>
+        <circle cx="14" cy="18" r="3" fill="#e0645e"/><text x="22" y="21" font-size="9.5" font-weight="700" fill="#9a9aa6" letter-spacing="0.5">BETA CO</text>
+        <rect x="146" y="10" width="40" height="16" rx="5" fill="#1b1b20" stroke="#2a2a31"/><text x="166" y="21" font-size="10" font-weight="700" fill="#e6e6ea" text-anchor="middle">BET-31</text>
+        <text x="14" y="45" font-size="12.5" fill="#e6e6ea">Add dark mode to settings</text>
+        <rect x="14" y="60" width="60" height="17" rx="8.5" fill="#242a4a"/><circle cx="24" cy="68" r="3.5" fill="#5e6ad2"/><text x="34" y="72" font-size="10" font-weight="500" fill="#a3adff">feature</text>
+      </g>
+
+      <g transform="translate(10,142)">
+        <rect width="196" height="82" rx="8" fill="#212127" stroke="#2a2a31"/>
+        <circle cx="14" cy="18" r="3" fill="#5e6ad2"/><text x="22" y="21" font-size="9.5" font-weight="700" fill="#9a9aa6" letter-spacing="0.5">ACME</text>
+        <rect x="140" y="10" width="46" height="16" rx="5" fill="#1b1b20" stroke="#2a2a31"/><text x="163" y="21" font-size="10" font-weight="700" fill="#e6e6ea" text-anchor="middle">ACM-160</text>
+        <text x="14" y="45" font-size="12.5" fill="#e6e6ea">Rate-limit the public API</text>
+        <rect x="14" y="58" width="58" height="17" rx="5" fill="#2c3a12"/><text x="43" y="70" font-size="10" font-weight="600" fill="#b6d97a" text-anchor="middle">Medium</text>
+      </g>
+    </g>
+
+    <!-- ============ TODO ============ -->
+    <g transform="translate(492,0)">
+      <rect width="216" height="596" rx="11" fill="#1b1b20" stroke="#2a2a31"/>
+      <circle cx="18" cy="24" r="5" fill="#e2c541"/><text x="32" y="28" font-size="13" font-weight="700" fill="#e6e6ea">Todo</text><text x="196" y="28" font-size="12" font-weight="600" fill="#6a6a76" text-anchor="end">2</text>
+
+      <g transform="translate(10,42)">
+        <rect width="196" height="98" rx="8" fill="#212127" stroke="#2a2a31"/>
+        <circle cx="14" cy="18" r="3" fill="#d99a3f"/><text x="22" y="21" font-size="9.5" font-weight="700" fill="#9a9aa6" letter-spacing="0.5">SIDE PROJECT</text>
+        <rect x="150" y="10" width="36" height="16" rx="5" fill="#1b1b20" stroke="#2a2a31"/><text x="168" y="21" font-size="10" font-weight="700" fill="#e6e6ea" text-anchor="middle">SID-7</text>
+        <text x="14" y="45" font-size="12.5" fill="#e6e6ea">Wire up email digests</text>
+        <rect x="14" y="60" width="42" height="17" rx="8.5" fill="#3a1f1e"/><circle cx="24" cy="68" r="3.5" fill="#e0645e"/><text x="34" y="72" font-size="10" font-weight="500" fill="#e8938e">bug</text>
+        <circle cx="176" cy="68" r="10" fill="#d99a3f"/><text x="176" y="72" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">AM</text>
+      </g>
+
+      <g transform="translate(10,150)">
+        <rect width="196" height="82" rx="8" fill="#212127" stroke="#2a2a31"/>
+        <circle cx="14" cy="18" r="3" fill="#3fb950"/><text x="22" y="21" font-size="9.5" font-weight="700" fill="#9a9aa6" letter-spacing="0.5">STUDIO</text>
+        <rect x="146" y="10" width="40" height="16" rx="5" fill="#1b1b20" stroke="#2a2a31"/><text x="166" y="21" font-size="10" font-weight="700" fill="#e6e6ea" text-anchor="middle">STU-91</text>
+        <text x="14" y="45" font-size="12.5" fill="#e6e6ea">Migrate icons to sprite</text>
+        <rect x="14" y="58" width="34" height="17" rx="5" fill="#1f2b3a"/><text x="31" y="70" font-size="10" font-weight="600" fill="#8fb4e0" text-anchor="middle">Low</text>
+      </g>
+    </g>
+
+    <!-- ============ IN PROGRESS ============ -->
+    <g transform="translate(726,0)">
+      <rect width="216" height="596" rx="11" fill="#1b1b20" stroke="#2a2a31"/>
+      <circle cx="18" cy="24" r="5" fill="#5e6ad2"/><text x="32" y="28" font-size="13" font-weight="700" fill="#e6e6ea">In Progress</text><text x="196" y="28" font-size="12" font-weight="600" fill="#6a6a76" text-anchor="end">2</text>
+
+      <g transform="translate(10,42)">
+        <rect width="196" height="90" rx="8" fill="#212127" stroke="#2a2a31"/>
+        <circle cx="14" cy="18" r="3" fill="#5e6ad2"/><text x="22" y="21" font-size="9.5" font-weight="700" fill="#9a9aa6" letter-spacing="0.5">ACME</text>
+        <rect x="140" y="10" width="46" height="16" rx="5" fill="#1b1b20" stroke="#2a2a31"/><text x="163" y="21" font-size="10" font-weight="700" fill="#e6e6ea" text-anchor="middle">ACM-158</text>
+        <text x="14" y="45" font-size="12.5" fill="#e6e6ea">Realtime board sync</text>
+        <rect x="14" y="60" width="40" height="17" rx="5" fill="#4a2f12"/><text x="34" y="72" font-size="10" font-weight="600" fill="#ffb774" text-anchor="middle">High</text>
+        <circle cx="176" cy="68" r="10" fill="#5e6ad2"/><text x="176" y="72" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">JD</text>
+      </g>
+
+      <g transform="translate(10,142)">
+        <rect width="196" height="82" rx="8" fill="#212127" stroke="#2a2a31"/>
+        <circle cx="14" cy="18" r="3" fill="#e0645e"/><text x="22" y="21" font-size="9.5" font-weight="700" fill="#9a9aa6" letter-spacing="0.5">BETA CO</text>
+        <rect x="146" y="10" width="40" height="16" rx="5" fill="#1b1b20" stroke="#2a2a31"/><text x="166" y="21" font-size="10" font-weight="700" fill="#e6e6ea" text-anchor="middle">BET-40</text>
+        <text x="14" y="45" font-size="12.5" fill="#e6e6ea">Stripe webhook retries</text>
+        <circle cx="176" cy="62" r="10" fill="#e0645e"/><text x="176" y="66" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">SL</text>
+      </g>
+    </g>
+
+    <!-- ============ DONE ============ -->
+    <g transform="translate(960,0)">
+      <rect width="216" height="596" rx="11" fill="#1b1b20" stroke="#2a2a31"/>
+      <circle cx="18" cy="24" r="5" fill="#3fb950"/><text x="32" y="28" font-size="13" font-weight="700" fill="#e6e6ea">Done</text><text x="196" y="28" font-size="12" font-weight="600" fill="#6a6a76" text-anchor="end">2</text>
+
+      <g transform="translate(10,42)">
+        <rect width="196" height="82" rx="8" fill="#212127" stroke="#2a2a31"/>
+        <circle cx="14" cy="18" r="3" fill="#3fb950"/><text x="22" y="21" font-size="9.5" font-weight="700" fill="#9a9aa6" letter-spacing="0.5">STUDIO</text>
+        <rect x="146" y="10" width="40" height="16" rx="5" fill="#1b1b20" stroke="#2a2a31"/><text x="166" y="21" font-size="10" font-weight="700" fill="#e6e6ea" text-anchor="middle">STU-80</text>
+        <text x="14" y="45" font-size="12.5" fill="#e6e6ea">Ship v2 landing page</text>
+        <rect x="14" y="58" width="46" height="17" rx="8.5" fill="#12331b"/><circle cx="24" cy="66" r="3.5" fill="#3fb950"/><text x="34" y="70" font-size="10" font-weight="500" fill="#7ee38a">done</text>
+      </g>
+
+      <g transform="translate(10,134)">
+        <rect width="196" height="82" rx="8" fill="#212127" stroke="#2a2a31"/>
+        <circle cx="14" cy="18" r="3" fill="#d99a3f"/><text x="22" y="21" font-size="9.5" font-weight="700" fill="#9a9aa6" letter-spacing="0.5">SIDE PROJECT</text>
+        <rect x="150" y="10" width="36" height="16" rx="5" fill="#1b1b20" stroke="#2a2a31"/><text x="168" y="21" font-size="10" font-weight="700" fill="#e6e6ea" text-anchor="middle">SID-4</text>
+        <text x="14" y="45" font-size="12.5" fill="#e6e6ea">Set up CI pipeline</text>
+        <circle cx="176" cy="62" r="10" fill="#d99a3f"/><text x="176" y="66" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">AM</text>
+      </g>
+    </g>
+
+  </g>
+</svg>

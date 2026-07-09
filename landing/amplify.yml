@@ -1,0 +1,15 @@
+# AWS Amplify Hosting build spec for the static marketing page.
+# In the Amplify console, set the app's "monorepo root directory" to `landing`.
+# There is no build step — the page is plain static HTML/SVG, served as-is.
+version: 1
+frontend:
+  phases:
+    build:
+      commands: []
+  artifacts:
+    # Serve everything in this folder (index.html, favicon.svg, og.svg).
+    baseDirectory: .
+    files:
+      - '**/*'
+  cache:
+    paths: []

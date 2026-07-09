@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#16161b"/>
+      <stop offset="1" stop-color="#0e0e11"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="26%" cy="-5%" r="65%">
+      <stop offset="0" stop-color="#5e6ad2" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#5e6ad2" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="logo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5e6ad2"/>
+      <stop offset="1" stop-color="#8f9bff"/>
+    </linearGradient>
+    <linearGradient id="grad-text" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#c7ccff"/>
+      <stop offset="1" stop-color="#8f9bff"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="360" rx="18" fill="url(#bg)"/>
+  <rect width="1280" height="360" rx="18" fill="url(#glow)"/>
+  <rect x="0.5" y="0.5" width="1279" height="359" rx="17.5" fill="none" stroke="#2a2a31"/>
+
+  <!-- left: brand + copy -->
+  <g transform="translate(72,74)">
+    <!-- logo mark -->
+    <rect width="52" height="52" rx="13" fill="url(#logo)"/>
+    <rect x="12" y="11" width="12" height="30" rx="2.5" fill="#fff"/>
+    <rect x="29" y="11" width="12" height="18" rx="2.5" fill="#fff" opacity="0.72"/>
+    <text x="70" y="34" font-size="26" font-weight="600" fill="#e6e6ea" letter-spacing="-0.5">Linear MultiBoard</text>
+
+    <text x="0" y="118" font-size="52" font-weight="700" fill="#e6e6ea" letter-spacing="-1.5">All your Linear workspaces,</text>
+    <text x="0" y="176" font-size="52" font-weight="700" fill="url(#grad-text)" letter-spacing="-1.5">on one screen.</text>
+
+    <text x="2" y="224" font-size="20" fill="#9a9aa6">Read-only Kanban boards across every workspace &#183; open source &#183; no backend.</text>
+
+    <!-- tag row -->
+    <g transform="translate(2,250)" font-size="13" font-weight="600">
+      <rect width="128" height="30" rx="15" fill="#1b1b20" stroke="#2a2a31"/>
+      <circle cx="20" cy="15" r="4" fill="#3fb950"/>
+      <text x="34" y="19" fill="#9a9aa6">No database</text>
+
+      <g transform="translate(140,0)">
+        <rect width="150" height="30" rx="15" fill="#1b1b20" stroke="#2a2a31"/>
+        <circle cx="20" cy="15" r="4" fill="#5e6ad2"/>
+        <text x="34" y="19" fill="#9a9aa6">Keys stay local</text>
+      </g>
+
+      <g transform="translate(302,0)">
+        <rect width="118" height="30" rx="15" fill="#1b1b20" stroke="#2a2a31"/>
+        <circle cx="20" cy="15" r="4" fill="#d99a3f"/>
+        <text x="34" y="19" fill="#9a9aa6">MIT licensed</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- right: mini board motif -->
+  <g transform="translate(858,58)">
+    <rect x="-14" y="-14" width="452" height="272" rx="14" fill="#141418" stroke="#2a2a31"/>
+    <!-- workspace tabs -->
+    <g transform="translate(4,2)" font-size="11" font-weight="600">
+      <rect width="70" height="22" rx="7" fill="#1b1b20" stroke="#2a2a31"/>
+      <rect x="8" y="6" width="10" height="10" rx="3" fill="#5e6ad2"/><text x="24" y="15" fill="#e6e6ea">Acme</text>
+      <g transform="translate(78,0)"><rect width="74" height="22" rx="7" fill="#141418"/><rect x="8" y="6" width="10" height="10" rx="3" fill="#e0645e"/><text x="24" y="15" fill="#9a9aa6">Beta Co</text></g>
+      <g transform="translate(160,0)"><rect width="70" height="22" rx="7" fill="#141418"/><rect x="8" y="6" width="10" height="10" rx="3" fill="#3fb950"/><text x="24" y="15" fill="#9a9aa6">Studio</text></g>
+    </g>
+
+    <!-- columns -->
+    <g transform="translate(0,34)">
+      <!-- col template repeated -->
+      <!-- Triage -->
+      <g transform="translate(0,0)">
+        <rect width="102" height="212" rx="9" fill="#1b1b20" stroke="#2a2a31"/>
+        <circle cx="14" cy="18" r="4.5" fill="#9a9aa6"/><text x="26" y="22" font-size="11" font-weight="600" fill="#e6e6ea">Triage</text>
+        <g transform="translate(8,32)"><rect width="86" height="52" rx="6" fill="#212127" stroke="#2a2a31"/><rect x="8" y="9" width="30" height="6" rx="3" fill="#5e6ad2"/><rect x="8" y="22" width="66" height="5" rx="2.5" fill="#3a3a44"/><rect x="8" y="33" width="46" height="5" rx="2.5" fill="#3a3a44"/><rect x="8" y="42" width="34" height="9" rx="3" fill="#4c1d1d"/></g>
+        <g transform="translate(8,92)"><rect width="86" height="46" rx="6" fill="#212127" stroke="#2a2a31"/><rect x="8" y="9" width="26" height="6" rx="3" fill="#3fb950"/><rect x="8" y="22" width="60" height="5" rx="2.5" fill="#3a3a44"/><rect x="8" y="31" width="40" height="5" rx="2.5" fill="#3a3a44"/></g>
+      </g>
+      <!-- Todo -->
+      <g transform="translate(110,0)">
+        <rect width="102" height="212" rx="9" fill="#1b1b20" stroke="#2a2a31"/>
+        <circle cx="14" cy="18" r="4.5" fill="#e2c541"/><text x="26" y="22" font-size="11" font-weight="600" fill="#e6e6ea">Todo</text>
+        <g transform="translate(8,32)"><rect width="86" height="46" rx="6" fill="#212127" stroke="#2a2a31"/><rect x="8" y="9" width="30" height="6" rx="3" fill="#d99a3f"/><rect x="8" y="22" width="64" height="5" rx="2.5" fill="#3a3a44"/><rect x="8" y="31" width="44" height="5" rx="2.5" fill="#3a3a44"/></g>
+        <g transform="translate(8,86)"><rect width="86" height="52" rx="6" fill="#212127" stroke="#2a2a31"/><rect x="8" y="9" width="26" height="6" rx="3" fill="#3fb950"/><rect x="8" y="22" width="58" height="5" rx="2.5" fill="#3a3a44"/><rect x="8" y="33" width="50" height="5" rx="2.5" fill="#3a3a44"/><rect x="8" y="42" width="30" height="9" rx="3" fill="#2c3a12"/></g>
+      </g>
+      <!-- In Progress -->
+      <g transform="translate(220,0)">
+        <rect width="102" height="212" rx="9" fill="#1b1b20" stroke="#2a2a31"/>
+        <circle cx="14" cy="18" r="4.5" fill="#5e6ad2"/><text x="26" y="22" font-size="11" font-weight="600" fill="#e6e6ea">Progress</text>
+        <g transform="translate(8,32)"><rect width="86" height="52" rx="6" fill="#212127" stroke="#2a2a31"/><rect x="8" y="9" width="30" height="6" rx="3" fill="#5e6ad2"/><rect x="8" y="22" width="66" height="5" rx="2.5" fill="#3a3a44"/><rect x="8" y="33" width="42" height="5" rx="2.5" fill="#3a3a44"/><rect x="8" y="42" width="34" height="9" rx="3" fill="#4a2f12"/></g>
+        <g transform="translate(8,92)"><rect width="86" height="46" rx="6" fill="#212127" stroke="#2a2a31"/><rect x="8" y="9" width="26" height="6" rx="3" fill="#e0645e"/><rect x="8" y="22" width="58" height="5" rx="2.5" fill="#3a3a44"/><rect x="60" y="30" width="18" height="10" rx="5" fill="#5e6ad2"/></g>
+      </g>
+      <!-- Done -->
+      <g transform="translate(330,0)">
+        <rect width="94" height="212" rx="9" fill="#1b1b20" stroke="#2a2a31"/>
+        <circle cx="14" cy="18" r="4.5" fill="#3fb950"/><text x="26" y="22" font-size="11" font-weight="600" fill="#e6e6ea">Done</text>
+        <g transform="translate(8,32)"><rect width="78" height="46" rx="6" fill="#212127" stroke="#2a2a31"/><rect x="8" y="9" width="24" height="6" rx="3" fill="#3fb950"/><rect x="8" y="22" width="54" height="5" rx="2.5" fill="#3a3a44"/><rect x="8" y="31" width="36" height="9" rx="3" fill="#12331b"/></g>
+        <g transform="translate(8,86)"><rect width="78" height="46" rx="6" fill="#212127" stroke="#2a2a31"/><rect x="8" y="9" width="24" height="6" rx="3" fill="#d99a3f"/><rect x="8" y="22" width="50" height="5" rx="2.5" fill="#3a3a44"/><rect x="56" y="30" width="18" height="10" rx="5" fill="#d99a3f"/></g>
+      </g>
+    </g>
+  </g>
+</svg>

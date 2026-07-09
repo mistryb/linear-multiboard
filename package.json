@@ -4,6 +4,13 @@
   "version": "0.1.0",
   "type": "module",
   "description": "View all your Linear workspaces as Kanban boards on one screen. Read-only, no database.",
+  "license": "MIT",
+  "author": "Bhavik Mistry",
+  "homepage": "https://linearmultiboard.bhavikmistry.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mistryb/linear-multiboard.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

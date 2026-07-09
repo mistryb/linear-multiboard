@@ -1,14 +1,48 @@
-# Linear MultiBoard
+<p align="center">
+  <img src="assets/banner.svg" alt="Linear MultiBoard — all your Linear workspaces on one screen" width="100%" />
+</p>
 
-View **all of your Linear workspaces** as Kanban boards on one screen. Read-only,
-purely reading from the Linear API — **no database, no backend, no OAuth**. Your
-workspace API keys live only in a local JSON file that is never committed.
+<h1 align="center">Linear MultiBoard</h1>
+
+<p align="center">
+  View <strong>all of your Linear workspaces</strong> as Kanban boards on one screen.<br/>
+  Read-only, open source, <strong>no database · no backend · no OAuth</strong>.
+</p>
+
+<p align="center">
+  <a href="https://linearmultiboard.bhavikmistry.com"><strong>🌐 linearmultiboard.bhavikmistry.com</strong></a>
+  &nbsp;·&nbsp;
+  <a href="#setup">Setup</a>
+  &nbsp;·&nbsp;
+  <a href="#how-it-works">How it works</a>
+</p>
+
+<p align="center">
+  <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-5e6ad2" />
+  <img alt="Read-only" src="https://img.shields.io/badge/mode-read--only-3fb950" />
+  <img alt="No backend" src="https://img.shields.io/badge/backend-none-9a9aa6" />
+  <img alt="Built with Vite + React" src="https://img.shields.io/badge/vite%20%2B%20react-646cff" />
+</p>
+
+<p align="center">
+  <img src="assets/board-preview.svg" alt="Linear MultiBoard showing several Linear workspaces as Kanban columns" width="100%" />
+</p>
+
+---
+
+Read-only, purely reading from the Linear API — **no database, no backend, no
+OAuth**. Your workspace API keys live only in a local JSON file that is never
+committed.
 
 - One tab per workspace (organization) across the top.
 - Per workspace, pick a team and see its issues in a Linear-style Kanban board,
   columns ordered Triage → Backlog → Todo → In Progress → Done.
 - Cards show identifier, priority, labels, and assignee; click a card to open it
   in Linear.
+
+> **Website:** the marketing page lives at
+> **[linearmultiboard.bhavikmistry.com](https://linearmultiboard.bhavikmistry.com)**
+> (source in [`landing/`](landing/), hosted on AWS Amplify).
 
 ## How it works
 
@@ -91,3 +125,13 @@ src/
     IssueCard.tsx        a single issue card
     SetupScreen.tsx      first-run instructions when no config exists
 ```
+
+## License
+
+Licensed under the [MIT License](LICENSE) — free to use, modify, and distribute,
+including commercially. Just keep the copyright and license notice.
+
+© 2026 Bhavik Mistry
+
+Not affiliated with or endorsed by Linear. “Linear” is a trademark of Linear
+Orbit, Inc.
