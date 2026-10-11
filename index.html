@@ -1,13 +1,650 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%235e6ad2'/%3E%3C/svg%3E" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Linear MultiBoard</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Linear MultiBoard — All your Linear workspaces on one screen</title>
+  <meta name="description" content="View all of your Linear workspaces as Kanban boards on one screen. Read-only, open source, and ready in minutes — use the hosted app or self-host it." />
+
+  <!-- Open Graph / social -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Linear MultiBoard" />
+  <meta property="og:description" content="View all your Linear workspaces as Kanban boards on one screen. Read-only and open source." />
+  <meta property="og:image" content="/og.svg" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+  <style>
+    :root {
+      --bg: #0e0e11;
+      --bg-panel: #17171b;
+      --bg-column: #1b1b20;
+      --bg-card: #212127;
+      --bg-card-hover: #26262e;
+      --border: #2a2a31;
+      --text: #e6e6ea;
+      --text-dim: #9a9aa6;
+      --text-faint: #6a6a76;
+      --accent: #5e6ad2;
+      --accent-soft: rgba(94, 106, 210, 0.14);
+      --radius: 12px;
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    h1, h2, h3 { letter-spacing: -0.02em; line-height: 1.15; margin: 0; }
+    p { margin: 0; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+      background: var(--bg-column);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 5px;
+      font-size: 0.85em;
+    }
+
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+    /* ---------- background glow ---------- */
+    .glow {
+      position: absolute;
+      top: -280px; left: 50%;
+      transform: translateX(-50%);
+      width: 900px; height: 700px;
+      background: radial-gradient(closest-side, var(--accent-soft), transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ---------- nav ---------- */
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      backdrop-filter: blur(12px);
+      background: rgba(14, 14, 17, 0.72);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      display: flex; align-items: center; gap: 16px;
+      height: 60px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; }
+    .brand-badge {
+      width: 26px; height: 26px; border-radius: 7px;
+      background: linear-gradient(150deg, var(--accent), #8f9bff);
+      box-shadow: 0 4px 14px rgba(94,106,210,0.4);
+      display: grid; place-items: center;
+    }
+    .brand-badge svg { width: 15px; height: 15px; }
+    .nav-links { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .nav-links a.text { color: var(--text-dim); padding: 8px 12px; border-radius: 8px; font-size: 14px; }
+    .nav-links a.text:hover { color: var(--text); background: var(--bg-column); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 9px 16px; border-radius: 9px;
+      border: 1px solid var(--border); background: var(--bg-column);
+      color: var(--text); font-size: 14px; font-weight: 550;
+      transition: background .15s, border-color .15s, transform .1s;
+    }
+    .btn:hover { background: var(--bg-card-hover); }
+    .btn:active { transform: translateY(1px); }
+    .btn svg { width: 16px; height: 16px; }
+    .btn-primary {
+      background: var(--accent); border-color: var(--accent); color: #fff;
+      box-shadow: 0 6px 20px rgba(94,106,210,0.35);
+    }
+    .btn-primary:hover { filter: brightness(1.08); background: var(--accent); }
+    .btn-lg { padding: 12px 22px; font-size: 15px; }
+
+    /* ---------- hero ---------- */
+    header { position: relative; overflow: hidden; }
+    .hero { position: relative; z-index: 1; text-align: center; padding: 84px 0 40px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 5px 13px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--bg-panel);
+      color: var(--text-dim); font-size: 13px; font-weight: 500;
+      margin-bottom: 26px;
+    }
+    .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: #3fb950; box-shadow: 0 0 10px #3fb950; }
+    .hero h1 { font-size: clamp(34px, 6vw, 60px); font-weight: 720; }
+    .hero h1 .grad {
+      background: linear-gradient(120deg, #8f9bff, var(--accent));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero p.sub {
+      max-width: 620px; margin: 22px auto 0;
+      font-size: clamp(16px, 2.4vw, 19px); color: var(--text-dim);
+    }
+    .hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 34px; }
+    .hero-note { margin-top: 16px; font-size: 13px; color: var(--text-faint); }
+    .hero-note a { color: var(--text-dim); text-decoration: underline; }
+
+    /* ---------- board mock ---------- */
+    .mock-frame {
+      position: relative; z-index: 1;
+      margin: 46px auto 0; max-width: 1000px;
+      border: 1px solid var(--border); border-radius: 16px;
+      background: var(--bg-panel); overflow: hidden;
+      box-shadow: 0 40px 100px -30px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.02);
+    }
+    .mock-topbar {
+      display: flex; align-items: center; gap: 12px;
+      height: 46px; padding: 0 14px;
+      border-bottom: 1px solid var(--border); background: var(--bg-panel);
+    }
+    .mock-dots { display: flex; gap: 6px; }
+    .mock-dots i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+    .mock-dots i:nth-child(1) { background: #ff5f57; }
+    .mock-dots i:nth-child(2) { background: #febc2e; }
+    .mock-dots i:nth-child(3) { background: #28c840; }
+    .mock-tabs { display: flex; gap: 6px; margin-left: 10px; overflow: hidden; }
+    .mock-tab {
+      display: flex; align-items: center; gap: 7px;
+      padding: 5px 11px; border-radius: 8px; font-size: 12.5px;
+      color: var(--text-dim); white-space: nowrap;
+    }
+    .mock-tab .ws { width: 15px; height: 15px; border-radius: 4px; }
+    .mock-tab.active { background: var(--bg-column); color: var(--text); border: 1px solid var(--border); }
+
+    .mock-board { display: flex; gap: 12px; padding: 16px; overflow: hidden; background: var(--bg); }
+    .mcol {
+      flex: 1; min-width: 0;
+      background: var(--bg-column); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px;
+    }
+    .mcol-head { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; margin-bottom: 10px; }
+    .mcol-head .sd { width: 9px; height: 9px; border-radius: 50%; }
+    .mcol-head .ct { margin-left: auto; color: var(--text-faint); font-weight: 500; }
+    .mcard {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 8px; padding: 9px; margin-bottom: 8px;
+    }
+    .mcard:last-child { margin-bottom: 0; }
+    .mcard-top { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
+    .mws { font-size: 9.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-dim); }
+    .mws .d { display: inline-block; width: 5px; height: 5px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+    .mid {
+      margin-left: auto; font-size: 10px; font-weight: 700; color: var(--text);
+      background: var(--bg-column); border: 1px solid var(--border);
+      padding: 1px 6px; border-radius: 5px; font-variant-numeric: tabular-nums;
+    }
+    .mtitle { font-size: 12px; line-height: 1.35; color: var(--text); }
+    .mmeta { display: flex; align-items: center; gap: 5px; margin-top: 8px; }
+    .mprio { font-size: 9.5px; font-weight: 600; padding: 1px 6px; border-radius: 5px; }
+    .p1 { background:#4c1d1d; color:#ff8f8f; } .p2 { background:#4a2f12; color:#ffb774; }
+    .p3 { background:#2c3a12; color:#b6d97a; } .p4 { background:#1f2b3a; color:#8fb4e0; }
+    .mchip { font-size: 9.5px; padding: 1px 7px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px; }
+    .mchip .ld { width: 6px; height: 6px; border-radius: 50%; }
+    .mav { width: 17px; height: 17px; border-radius: 50%; margin-left: auto; display: grid; place-items: center; font-size: 8.5px; font-weight: 600; color: #fff; }
+
+    /* ---------- sections ---------- */
+    section { position: relative; padding: 72px 0; }
+    .sec-head { text-align: center; max-width: 640px; margin: 0 auto 48px; }
+    .sec-head h2 { font-size: clamp(26px, 4vw, 38px); font-weight: 680; }
+    .sec-head p { margin-top: 14px; color: var(--text-dim); font-size: 17px; }
+    .eyebrow { color: var(--accent); font-weight: 600; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 12px; display: block; }
+
+    .divider { border: 0; border-top: 1px solid var(--border); margin: 0; opacity: .6; }
+
+    /* feature grid */
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .feat {
+      background: var(--bg-panel); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
+      transition: border-color .15s, transform .15s;
+    }
+    .feat:hover { border-color: #3a3a45; transform: translateY(-3px); }
+    .feat-ic {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--accent-soft); border: 1px solid rgba(94,106,210,0.3);
+      display: grid; place-items: center; margin-bottom: 16px; color: #a3adff;
+    }
+    .feat-ic svg { width: 20px; height: 20px; }
+    .feat h3 { font-size: 17px; margin-bottom: 8px; }
+    .feat p { color: var(--text-dim); font-size: 14.5px; }
+
+    /* how it works */
+    .steps { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 40px; align-items: center; }
+    .step { display: flex; gap: 16px; margin-bottom: 26px; }
+    .step:last-child { margin-bottom: 0; }
+    .step-n {
+      flex-shrink: 0; width: 34px; height: 34px; border-radius: 9px;
+      background: var(--accent-soft); border: 1px solid rgba(94,106,210,0.3);
+      color: #a3adff; font-weight: 700; display: grid; place-items: center; font-size: 15px;
+    }
+    .step h3 { font-size: 16.5px; margin-bottom: 5px; }
+    .step p { color: var(--text-dim); font-size: 14.5px; }
+    .step p a { color: #a3adff; text-decoration: underline; text-underline-offset: 2px; }
+
+    .codeblock {
+      background: var(--bg-panel); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+    }
+    .codeblock-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    .codeblock-bar .fn { color: var(--text-faint); font-size: 12.5px; font-family: ui-monospace, monospace; margin-left: 4px; }
+    .codeblock pre {
+      margin: 0; padding: 18px; overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px; line-height: 1.7; color: var(--text-dim);
+    }
+    .codeblock pre .k { color: #a3adff; } .codeblock pre .s { color: #b6d97a; } .codeblock pre .c { color: var(--text-faint); }
+
+    /* privacy band */
+    .band {
+      background: linear-gradient(180deg, var(--bg-panel), var(--bg));
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    }
+    .privacy { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+    .privacy .p {
+      text-align: center; padding: 22px 16px;
+      border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg);
+    }
+    .privacy .p .ic { color: #3fb950; margin-bottom: 10px; }
+    .privacy .p .ic svg { width: 24px; height: 24px; }
+    .privacy .p strong { display: block; font-size: 15px; margin-bottom: 4px; }
+    .privacy .p span { color: var(--text-dim); font-size: 13px; }
+
+    /* final cta */
+    /* ---------- pricing ---------- */
+    .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: stretch; }
+    .plan {
+      background: var(--bg-panel); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px 24px;
+      display: flex; flex-direction: column;
+    }
+    .plan.featured { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 20px 60px -30px var(--accent); }
+    .plan-name { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+    .plan-tag { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: #1f3a24; color: #7ee08f; }
+    .plan-price { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; margin: 14px 0 2px; }
+    .plan-price small { font-size: 15px; font-weight: 500; color: var(--text-dim); letter-spacing: 0; }
+    .plan-sub { color: var(--text-faint); font-size: 13px; min-height: 20px; }
+    .plan ul { list-style: none; padding: 0; margin: 22px 0 26px; display: grid; gap: 10px; flex: 1; }
+    .plan li { display: flex; gap: 10px; color: var(--text-dim); font-size: 14px; }
+    .plan li svg { width: 16px; height: 16px; color: #3fb950; flex-shrink: 0; margin-top: 2px; }
+    .plan .btn { justify-content: center; }
+    .plans-note { text-align: center; color: var(--text-faint); font-size: 13px; margin-top: 22px; }
+
+    .cta-card {
+      text-align: center; position: relative; overflow: hidden;
+      border: 1px solid var(--border); border-radius: 20px;
+      background: radial-gradient(closest-side at 50% -10%, var(--accent-soft), var(--bg-panel));
+      padding: 56px 28px;
+    }
+    .cta-card h2 { font-size: clamp(26px, 4vw, 36px); }
+    .cta-card p { color: var(--text-dim); margin: 14px auto 30px; max-width: 460px; }
+
+    /* footer */
+    footer { border-top: 1px solid var(--border); padding: 34px 0; }
+    .foot { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; color: var(--text-faint); font-size: 13.5px; }
+    .foot a { color: var(--text-dim); }
+    .foot a:hover { color: var(--text); }
+    .foot .sp { margin-left: auto; }
+
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; gap: 28px; }
+      .privacy { grid-template-columns: repeat(2, 1fr); }
+      .plans { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
+      .mock-board .mcol:nth-child(n+4) { display: none; }
+      .nav-links a.text { display: none; }
+    }
+    @media (max-width: 520px) {
+      .privacy { grid-template-columns: 1fr; }
+      .mock-board .mcol:nth-child(n+3) { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- NAV -->
+  <nav>
+    <div class="wrap nav-inner">
+      <a class="brand" href="#top">
+        <span class="brand-badge">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="18" rx="1.5" fill="#fff"/><rect x="14" y="3" width="7" height="11" rx="1.5" fill="#fff" opacity=".7"/></svg>
+        </span>
+        Linear MultiBoard
+      </a>
+      <div class="nav-links">
+        <a class="text" href="#features">Features</a>
+        <a class="text" href="#how">How it works</a>
+        <a class="text" href="#privacy">Privacy</a>
+        <a class="text" href="#pricing">Pricing</a>
+        <a class="text" href="/app">Sign in</a>
+        <a class="btn btn-primary" href="/app">Start free trial</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header id="top">
+    <div class="glow"></div>
+    <div class="wrap hero">
+      <span class="pill"><span class="dot"></span> Open source · Read-only · Hosted or self-hosted</span>
+      <h1>All your Linear workspaces,<br><span class="grad">on one screen.</span></h1>
+      <p class="sub">
+        Linear scopes everything to a single workspace. Linear MultiBoard resolves a personal
+        API key from <em>each</em> of your workspaces and renders them as Kanban boards side by side —
+        so you stop tab-hopping to see where work stands.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary btn-lg" href="/app">Start your free trial</a>
+        <a class="btn btn-lg" href="#how">See how it works</a>
+      </div>
+      <p class="hero-note">No credit card to start · Sign in with just your email · Prefer your own servers? <a href="https://github.com/mistryb/linear-multiboard#self-hosting">Self-host it</a></p>
+
+      <!-- BOARD MOCK -->
+      <div class="mock-frame" role="img" aria-label="Screenshot of Linear MultiBoard showing several workspaces as Kanban columns">
+        <div class="mock-topbar">
+          <div class="mock-dots"><i></i><i></i><i></i></div>
+          <div class="mock-tabs">
+            <div class="mock-tab active"><span class="ws" style="background:#5e6ad2"></span> Acme</div>
+            <div class="mock-tab"><span class="ws" style="background:#e0645e"></span> Beta Co</div>
+            <div class="mock-tab"><span class="ws" style="background:#3fb950"></span> Studio</div>
+            <div class="mock-tab"><span class="ws" style="background:#d99a3f"></span> Side Project</div>
+          </div>
+        </div>
+        <div class="mock-board">
+          <!-- Triage -->
+          <div class="mcol">
+            <div class="mcol-head"><span class="sd" style="background:#9a9aa6"></span> Triage <span class="ct">2</span></div>
+            <div class="mcard">
+              <div class="mcard-top"><span class="mws"><span class="d" style="background:#5e6ad2"></span>Acme</span><span class="mid">ACM-142</span></div>
+              <div class="mtitle">Onboarding flow drops on step 3</div>
+              <div class="mmeta"><span class="mprio p1">Urgent</span><span class="mav" style="background:#5e6ad2">JD</span></div>
+            </div>
+            <div class="mcard">
+              <div class="mcard-top"><span class="mws"><span class="d" style="background:#3fb950"></span>Studio</span><span class="mid">STU-88</span></div>
+              <div class="mtitle">Export PDF renders blank</div>
+              <div class="mmeta"><span class="mprio p2">High</span><span class="mav" style="background:#3fb950">RK</span></div>
+            </div>
+          </div>
+          <!-- Backlog -->
+          <div class="mcol">
+            <div class="mcol-head"><span class="sd" style="background:#8a8f98"></span> Backlog <span class="ct">3</span></div>
+            <div class="mcard">
+              <div class="mcard-top"><span class="mws"><span class="d" style="background:#e0645e"></span>Beta Co</span><span class="mid">BET-31</span></div>
+              <div class="mtitle">Add dark mode to settings</div>
+              <div class="mmeta"><span class="mchip" style="background:rgba(94,106,210,.15);color:#a3adff"><span class="ld" style="background:#5e6ad2"></span>feature</span></div>
+            </div>
+            <div class="mcard">
+              <div class="mcard-top"><span class="mws"><span class="d" style="background:#5e6ad2"></span>Acme</span><span class="mid">ACM-160</span></div>
+              <div class="mtitle">Rate-limit the public API</div>
+              <div class="mmeta"><span class="mprio p3">Medium</span></div>
+            </div>
+          </div>
+          <!-- Todo -->
+          <div class="mcol">
+            <div class="mcol-head"><span class="sd" style="background:#e2c541"></span> Todo <span class="ct">2</span></div>
+            <div class="mcard">
+              <div class="mcard-top"><span class="mws"><span class="d" style="background:#d99a3f"></span>Side Project</span><span class="mid">SID-7</span></div>
+              <div class="mtitle">Wire up email digests</div>
+              <div class="mmeta"><span class="mchip" style="background:rgba(224,100,94,.15);color:#e8938e"><span class="ld" style="background:#e0645e"></span>bug</span><span class="mav" style="background:#d99a3f">AM</span></div>
+            </div>
+            <div class="mcard">
+              <div class="mcard-top"><span class="mws"><span class="d" style="background:#3fb950"></span>Studio</span><span class="mid">STU-91</span></div>
+              <div class="mtitle">Migrate icons to SVG sprite</div>
+              <div class="mmeta"><span class="mprio p4">Low</span></div>
+            </div>
+          </div>
+          <!-- In Progress -->
+          <div class="mcol">
+            <div class="mcol-head"><span class="sd" style="background:#5e6ad2"></span> In Progress <span class="ct">2</span></div>
+            <div class="mcard">
+              <div class="mcard-top"><span class="mws"><span class="d" style="background:#5e6ad2"></span>Acme</span><span class="mid">ACM-158</span></div>
+              <div class="mtitle">Realtime board sync</div>
+              <div class="mmeta"><span class="mprio p2">High</span><span class="mav" style="background:#5e6ad2">JD</span></div>
+            </div>
+            <div class="mcard">
+              <div class="mcard-top"><span class="mws"><span class="d" style="background:#e0645e"></span>Beta Co</span><span class="mid">BET-40</span></div>
+              <div class="mtitle">Stripe webhook retries</div>
+              <div class="mmeta"><span class="mav" style="background:#e0645e">SL</span></div>
+            </div>
+          </div>
+          <!-- Done -->
+          <div class="mcol">
+            <div class="mcol-head"><span class="sd" style="background:#3fb950"></span> Done <span class="ct">2</span></div>
+            <div class="mcard">
+              <div class="mcard-top"><span class="mws"><span class="d" style="background:#3fb950"></span>Studio</span><span class="mid">STU-80</span></div>
+              <div class="mtitle">Ship v2 landing page</div>
+              <div class="mmeta"><span class="mchip" style="background:rgba(63,185,80,.15);color:#7ee38a"><span class="ld" style="background:#3fb950"></span>done</span></div>
+            </div>
+            <div class="mcard">
+              <div class="mcard-top"><span class="mws"><span class="d" style="background:#d99a3f"></span>Side Project</span><span class="mid">SID-4</span></div>
+              <div class="mtitle">Set up CI pipeline</div>
+              <div class="mmeta"><span class="mav" style="background:#d99a3f">AM</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Why it exists</span>
+        <h2>Built for people who live in more than one workspace</h2>
+        <p>Consultants, agencies, open-source maintainers, founders juggling side projects — one glance instead of five browser tabs.</p>
+      </div>
+      <div class="grid">
+        <div class="feat">
+          <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="11" rx="1"/></svg></div>
+          <h3>Every workspace, one screen</h3>
+          <p>One tab per organization across the top. Switch instantly, or view a combined board that merges issues from all of them.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 12h16M4 19h10"/></svg></div>
+          <h3>Familiar Linear-style board</h3>
+          <p>Columns ordered Triage → Backlog → Todo → In&nbsp;Progress → Done. Cards show identifier, priority, labels, and assignee — exactly where you expect them.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></div>
+          <h3>Click straight into Linear</h3>
+          <p>Every card links to the real issue. Use it as a read-only radar, then jump into Linear to actually do the work.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg></div>
+          <h3>Read-only by design</h3>
+          <p>Purely reads the Linear GraphQL API. Nothing is ever written back to your workspaces.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <h3>Keys encrypted at rest</h3>
+          <p>Workspace API keys are encrypted with AES-256 and only ever used server-side — they're never sent back to your browser.</p>
+        </div>
+        <div class="feat">
+          <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.2-8.5"/><path d="M21 3v6h-6"/></svg></div>
+          <h3>Fresh on demand</h3>
+          <p>Your last board loads instantly, then refreshes from Linear. Hit <strong>Refresh</strong> any time, and add or remove workspaces from Settings.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- HOW IT WORKS -->
+  <section id="how">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Setup in three steps</span>
+        <h2>Running in about two minutes</h2>
+        <p>Sign in with your email, paste a key per workspace, and you're done.</p>
+      </div>
+      <div class="steps">
+        <div>
+          <div class="step">
+            <div class="step-n">1</div>
+            <div>
+              <h3>Sign in with your email</h3>
+              <p>No password — we email you a one-time sign-in link.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n">2</div>
+            <div>
+              <h3>Create a personal API key in each workspace</h3>
+              <p>In Linear, open <a href="https://linear.app/settings/account/security">Settings → Security &amp; access → Personal API keys</a> and create one key per workspace you want to see.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-n">3</div>
+            <div>
+              <h3>Connect them in Settings</h3>
+              <p>Paste each key into MultiBoard. Each one resolves to its workspace and appears as its own tab, plus a combined All&nbsp;Issues board.</p>
+            </div>
+          </div>
+        </div>
+        <div class="codeblock">
+          <div class="codeblock-bar">
+            <div class="mock-dots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+            <span class="fn">MultiBoard · Settings</span>
+          </div>
+<pre><span class="c">// Linear workspaces</span>
+<span class="s">✓</span> <span class="k">Acme</span>        key …x9f2
+<span class="s">✓</span> <span class="k">Beta Co</span>     key …41ab
+<span class="s">✓</span> <span class="k">Studio</span>      key …7c0d
+
+<span class="c">+ lin_api_…</span>   [ Connect workspace ]</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRIVACY BAND -->
+  <section id="privacy" class="band">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Privacy by design</span>
+        <h2>Your data stays yours</h2>
+        <p>MultiBoard only reads what it needs to draw your board, and you can self-host the whole thing if you'd rather it never leaves your servers.</p>
+      </div>
+      <div class="privacy">
+        <div class="p">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <strong>No passwords</strong>
+          <span>Sign in with a one-time email link. No third-party login.</span>
+        </div>
+        <div class="p">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <strong>Encrypted keys</strong>
+          <span>API keys are encrypted at rest and never sent to the browser.</span>
+        </div>
+        <div class="p">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <strong>Read-only</strong>
+          <span>It never writes back to your Linear workspaces.</span>
+        </div>
+        <div class="p">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <strong>Open source</strong>
+          <span>Every line is on GitHub to audit — or to self-host.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Pricing</span>
+        <h2>One plan. Every workspace.</h2>
+        <p>Try it free for 14 days — no credit card. Then pick monthly or save with annual.</p>
+      </div>
+      <div class="plans">
+        <div class="plan">
+          <div class="plan-name">Monthly</div>
+          <div class="plan-price">$5<small> / month</small></div>
+          <div class="plan-sub">Billed monthly</div>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span>Unlimited Linear workspaces</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span>Combined All Issues board</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span>Keys encrypted at rest</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span>Cancel any time</span></li>
+          </ul>
+          <a class="btn btn-lg" href="/app">Start free trial</a>
+        </div>
+        <div class="plan featured">
+          <div class="plan-name">Annual <span class="plan-tag">2 months free</span></div>
+          <div class="plan-price">$50<small> / year</small></div>
+          <div class="plan-sub">Works out to about $4.17 / month</div>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span>Unlimited Linear workspaces</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span>Combined All Issues board</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span>Keys encrypted at rest</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span>Cancel any time</span></li>
+          </ul>
+          <a class="btn btn-primary btn-lg" href="/app">Start free trial</a>
+        </div>
+        <div class="plan">
+          <div class="plan-name">Self-hosted</div>
+          <div class="plan-price">Free</div>
+          <div class="plan-sub">Run it on your own infrastructure</div>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span>Everything in the hosted app</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span>One <code>docker compose up</code></span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span>Your servers, your database</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span>MIT licensed</span></li>
+          </ul>
+          <a class="btn btn-lg" href="https://github.com/mistryb/linear-multiboard#self-hosting">Self-host from GitHub</a>
+        </div>
+      </div>
+      <p class="plans-note">Prices in USD. Taxes may apply.</p>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section>
+    <div class="wrap">
+      <div class="cta-card">
+        <div class="glow" style="top:-200px"></div>
+        <h2>See all your Linear work at once</h2>
+        <p>Start a free trial — no credit card — and you're looking at every workspace side by side in minutes.</p>
+        <div class="hero-cta" style="margin-top:0">
+          <a class="btn btn-primary btn-lg" href="/app">Start your free trial</a>
+          <a class="btn btn-lg" href="https://github.com/mistryb/linear-multiboard#self-hosting">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49l-.01-1.9c-2.78.62-3.37-1.22-3.37-1.22-.46-1.18-1.11-1.49-1.11-1.49-.91-.63.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.9 1.56 2.36 1.11 2.94.85.09-.66.35-1.11.63-1.37-2.22-.26-4.55-1.14-4.55-5.05 0-1.12.39-2.03 1.03-2.74-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.4 9.4 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.71 1.03 1.62 1.03 2.74 0 3.92-2.34 4.79-4.57 5.04.36.32.68.94.68 1.9l-.01 2.81c0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg>
+            Self-host from GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="wrap foot">
+      <span class="brand" style="font-size:14px">
+        <span class="brand-badge" style="width:22px;height:22px">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="18" rx="1.5" fill="#fff"/><rect x="14" y="3" width="7" height="11" rx="1.5" fill="#fff" opacity=".7"/></svg>
+        </span>
+        Linear MultiBoard
+      </span>
+      <span>· MIT licensed open-source project</span>
+      <span class="sp"></span>
+      <a href="https://github.com/mistryb/linear-multiboard">GitHub</a>
+      <a href="https://github.com/mistryb/linear-multiboard/issues">Issues</a>
+      <a href="https://linear.app">Linear</a>
+    </div>
+    <div class="wrap foot" style="margin-top:14px;font-size:12px;color:var(--text-faint)">
+      Not affiliated with or endorsed by Linear. “Linear” is a trademark of Linear Orbit, Inc.
+    </div>
+  </footer>
+</body>
 </html>

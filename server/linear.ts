@@ -1,7 +1,8 @@
-import type { Issue, Organization, StateType } from './types'
+import type { ActiveIssue, Organization, StateType } from '../shared/types'
 
-// Thin GraphQL client. In dev, /graphql is proxied to https://api.linear.app.
-const GRAPHQL_URL = import.meta.env.DEV ? '/graphql' : 'https://api.linear.app/graphql'
+// Thin GraphQL client. Runs server-side only, so API keys never reach the
+// browser and Linear's CORS policy doesn't apply.
+const GRAPHQL_URL = 'https://api.linear.app/graphql'
 
 async function gql<T>(apiKey: string, query: string, variables?: unknown): Promise<T> {
   const res = await fetch(GRAPHQL_URL, {
@@ -12,6 +13,7 @@ async function gql<T>(apiKey: string, query: string, variables?: unknown): Promi
       Authorization: apiKey,
     },
     body: JSON.stringify({ query, variables }),
+    signal: AbortSignal.timeout(20_000),
   })
 
   if (res.status === 401) {
@@ -45,13 +47,6 @@ interface RawIssue {
   state: { id: string } | null
   assignee: { id: string; name: string; email: string | null; avatarUrl: string | null } | null
   labels: { nodes: { id: string; name: string; color: string }[] }
-}
-
-export interface ActiveIssue extends Issue {
-  stateType: StateType
-  stateName: string
-  teamKey: string
-  teamName: string
 }
 
 // Only these state types show on a board — this drops Done (completed) and

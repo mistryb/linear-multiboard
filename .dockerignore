@@ -1,0 +1,10 @@
+node_modules
+dist
+build
+data
+.env
+.env.*
+.git
+assets
+*.log
+public/linear.config.json

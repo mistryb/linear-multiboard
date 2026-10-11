@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import type { BoardIssue, Workspace } from '../linear/types'
-import { fetchActiveIssues, type ActiveIssue } from '../linear/api'
-import { loadIssuesCache, saveIssuesCache } from '../linear/cache'
+import type { BoardIssue, Workspace } from '../../shared/types'
+import { api } from '../api'
 
 export interface AllIssues {
   issues: BoardIssue[]
@@ -15,7 +14,7 @@ export interface AllIssues {
  * Loads every active issue across all workspaces ONCE and holds it. Both the
  * combined board and the per-workspace boards are pure client-side filters over
  * this single dataset — switching tabs never hits the API. Cache-first on the
- * initial load, then refreshes from Linear and persists back to disk.
+ * initial load (the server keeps the last board), then refreshes from Linear.
  */
 export function useAllIssues(workspaces: Workspace[]): AllIssues {
   const [issues, setIssues] = useState<BoardIssue[]>([])
@@ -36,53 +35,30 @@ export function useAllIssues(workspaces: Workspace[]): AllIssues {
     setLoading(true)
     setErrors([])
     ;(async () => {
-      // On first load (not manual refresh), paint the last-saved issues instantly
-      // while the live fetch runs in the background.
-      if (reloadKey === 0) {
-        const cached = await loadIssuesCache<BoardIssue>()
-        if (alive && cached && cached.issues.length > 0) {
-          setIssues(cached.issues)
-          setLastRefreshed(cached.savedAt)
-        }
-      }
-
-      // Fetch all workspaces in parallel; one failing key shouldn't sink the board.
-      const results = await Promise.all(
-        workspaces.map(async (w) => {
-          try {
-            return { ws: w, list: await fetchActiveIssues(w.apiKey), error: null as string | null }
-          } catch (e) {
-            return { ws: w, list: [] as ActiveIssue[], error: String((e as Error).message ?? e) }
+      try {
+        // On first load (not manual refresh), paint the last-saved issues instantly
+        // while the live fetch runs.
+        if (reloadKey === 0) {
+          const cached = await api.cachedIssues()
+          if (alive && cached.issues && cached.issues.length > 0) {
+            setIssues(cached.issues)
+            setLastRefreshed(cached.refreshedAt)
           }
-        }),
-      )
-      if (!alive) return
-
-      const all: BoardIssue[] = []
-      const errs: string[] = []
-      for (const r of results) {
-        if (r.error) errs.push(`${r.ws.organization.name}: ${r.error}`)
-        for (const it of r.list) {
-          all.push({
-            ...it,
-            workspaceId: r.ws.organization.id,
-            workspaceName: r.ws.organization.name,
-            workspaceLogoUrl: r.ws.organization.logoUrl,
-          })
         }
-      }
 
-      setErrors(errs)
-      // If every workspace failed, keep whatever we're already showing (likely
-      // the cache) rather than blanking the board. Otherwise adopt the fresh
-      // data and persist it for next time.
-      const anySuccess = results.some((r) => !r.error)
-      if (anySuccess) {
-        setIssues(all)
-        setLastRefreshed(Date.now())
-        void saveIssuesCache(all)
+        const fresh = await api.refreshIssues()
+        if (!alive) return
+        setErrors(fresh.errors)
+        // issues is null when every workspace failed — keep what's on screen.
+        if (fresh.issues) {
+          setIssues(fresh.issues)
+          setLastRefreshed(fresh.refreshedAt)
+        }
+      } catch (e) {
+        if (alive) setErrors([String((e as Error).message ?? e)])
+      } finally {
+        if (alive) setLoading(false)
       }
-      setLoading(false)
     })()
 
     return () => {

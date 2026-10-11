@@ -1,69 +1,43 @@
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-// Where the on-disk issue cache lives. Resolved relative to this config file so
-// it's stable regardless of the cwd the dev server is launched from.
-const CACHE_FILE = fileURLToPath(new URL('./data/issues.json', import.meta.url))
+// Two pages: the marketing site at / (index.html) and the app, a single-page
+// app, at /app (app/index.html). In dev, Vite serves both and proxies /api to
+// the Node server (`npm run dev:server`). In production the Node server serves
+// the built dist/ itself, so there's a single origin and no proxy.
 
-// A dev-only endpoint that lets the browser persist the loaded issues to
-// data/issues.json (GET to read, POST to write). This keeps the app otherwise
-// "backend-less" — the middleware only exists while `vite` (dev) is running.
-function issuesCachePlugin(): Plugin {
+// Dev only: send client-side app routes like /app/auth/verify to the app's HTML.
+function appRoutesFallback(): Plugin {
   return {
-    name: 'issues-cache',
+    name: 'app-routes-fallback',
     configureServer(server) {
-      server.middlewares.use('/api/issues-cache', async (req, res) => {
-        if (req.method === 'GET') {
-          try {
-            const data = await readFile(CACHE_FILE, 'utf8')
-            res.setHeader('Content-Type', 'application/json')
-            res.end(data)
-          } catch {
-            res.statusCode = 204 // no cache yet
-            res.end()
-          }
-          return
+      server.middlewares.use((req, _res, next) => {
+        const path = req.url?.split('?')[0] ?? ''
+        if ((path === '/app' || path.startsWith('/app/')) && !path.includes('.')) {
+          req.url = '/app/index.html' + (req.url!.includes('?') ? req.url!.slice(req.url!.indexOf('?')) : '')
         }
-
-        if (req.method === 'POST') {
-          try {
-            const chunks: Buffer[] = []
-            for await (const chunk of req) chunks.push(chunk as Buffer)
-            const body = Buffer.concat(chunks).toString('utf8')
-            JSON.parse(body) // validate before writing
-            await mkdir(dirname(CACHE_FILE), { recursive: true })
-            await writeFile(CACHE_FILE, body, 'utf8')
-            res.statusCode = 200
-            res.end('ok')
-          } catch {
-            res.statusCode = 400
-            res.end('invalid cache payload')
-          }
-          return
-        }
-
-        res.statusCode = 405
-        res.end()
+        next()
       })
     },
   }
 }
 
-// Linear's GraphQL API doesn't send permissive CORS headers for arbitrary
-// browser origins, so during local dev we proxy /graphql through the Vite dev
-// server. This keeps the app fully "serverless" (there is no backend of our
-// own) while sidestepping CORS. See README for details.
 export default defineConfig({
-  plugins: [react(), issuesCachePlugin()],
+  plugins: [react(), appRoutesFallback()],
+  build: {
+    rollupOptions: {
+      input: {
+        landing: fileURLToPath(new URL('./index.html', import.meta.url)),
+        app: fileURLToPath(new URL('./app/index.html', import.meta.url)),
+      },
+    },
+  },
   server: {
     port: 5173,
     proxy: {
-      '/graphql': {
-        target: 'https://api.linear.app',
-        changeOrigin: true,
+      '/api': {
+        target: `http://localhost:${process.env.PORT ?? 3000}`,
       },
     },
   },
