@@ -20,7 +20,18 @@ function encryptionKey(): Buffer {
   return key
 }
 
-const appUrl = (optional('APP_URL') ?? 'http://localhost:5173').replace(/\/+$/, '')
+// DATABASE_URL, or the discrete DB_* variables some hosts (e.g. Laravel Cloud) inject.
+function databaseUrl(): string {
+  const url = optional('DATABASE_URL')
+  if (url) return url
+  const host = optional('DB_HOST')
+  if (!host) return required('DATABASE_URL')
+  const user = encodeURIComponent(required('DB_USERNAME'))
+  const password = encodeURIComponent(optional('DB_PASSWORD') ?? '')
+  return `postgres://${user}:${password}@${host}:${optional('DB_PORT') ?? 5432}/${required('DB_DATABASE')}`
+}
+
+const appUrl =(optional('APP_URL') ?? 'http://localhost:5173').replace(/\/+$/, '')
 
 const stripeSecretKey = optional('STRIPE_SECRET_KEY')
 const stripeWebhookSecret = optional('STRIPE_WEBHOOK_SECRET')
@@ -31,7 +42,7 @@ export const env = {
   port: Number(optional('PORT') ?? 3000),
   appUrl,
   secureCookies: appUrl.startsWith('https://'),
-  databaseUrl: required('DATABASE_URL'),
+  databaseUrl: databaseUrl(),
   encryptionKey: encryptionKey(),
 
   // Magic-link email. Without SMTP_URL, sign-in links are printed to the server

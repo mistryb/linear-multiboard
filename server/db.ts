@@ -4,6 +4,10 @@ import { fileURLToPath } from 'node:url'
 import { env } from './env'
 
 export const sql = postgres(env.databaseUrl, {
+  // Managed Postgres (e.g. Laravel Cloud / Neon) requires TLS, but injected URLs
+  // don't always say so. Unless the URL sets sslmode, try TLS and fall back to
+  // plain for local Postgres.
+  ssl: /[?&]sslmode=/.test(env.databaseUrl) ? undefined : 'prefer',
   // Keep Postgres NOTICEs (e.g. "relation already exists") out of the logs.
   onnotice: () => {},
 })
