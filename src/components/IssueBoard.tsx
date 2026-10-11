@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { BoardIssue, StateType } from '../linear/types'
+import type { BoardIssue, StateType } from '../../shared/types'
 import { IssueCard } from './IssueCard'
 import { LastRefreshed } from './LastRefreshed'
 

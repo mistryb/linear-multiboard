@@ -10,3 +10,5 @@ public/linear.config.json
 
 # On-disk issue cache written by the dev server (may contain issue text/emails).
 data/
+*.tsbuildinfo
+build

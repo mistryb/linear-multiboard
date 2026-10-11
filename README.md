@@ -6,13 +6,15 @@
 
 <p align="center">
   View <strong>all of your Linear workspaces</strong> as Kanban boards on one screen.<br/>
-  Read-only, open source, <strong>no database · no backend · no OAuth</strong>.
+  Read-only, open source, <strong>self-hostable</strong> with one <code>docker compose up</code>.
 </p>
 
 <p align="center">
   <a href="https://linearmultiboard.bhavikmistry.com"><strong>🌐 linearmultiboard.bhavikmistry.com</strong></a>
   &nbsp;·&nbsp;
-  <a href="#setup">Setup</a>
+  <a href="#self-hosting">Self-hosting</a>
+  &nbsp;·&nbsp;
+  <a href="#development">Development</a>
   &nbsp;·&nbsp;
   <a href="#how-it-works">How it works</a>
 </p>
@@ -20,7 +22,7 @@
 <p align="center">
   <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-5e6ad2" />
   <img alt="Read-only" src="https://img.shields.io/badge/mode-read--only-3fb950" />
-  <img alt="No backend" src="https://img.shields.io/badge/backend-none-9a9aa6" />
+  <img alt="Docker" src="https://img.shields.io/badge/deploy-docker-2496ed" />
   <img alt="Built with Vite + React" src="https://img.shields.io/badge/vite%20%2B%20react-646cff" />
 </p>
 
@@ -30,100 +32,134 @@
 
 ---
 
-Read-only, purely reading from the Linear API — **no database, no backend, no
-OAuth**. Your workspace API keys live only in a local JSON file that is never
-committed.
+- One tab per Linear workspace across the top, plus an **All Issues** board that
+  merges every workspace.
+- Columns ordered Triage → Backlog → Todo → In Progress; cards show identifier,
+  priority, labels, and assignee. Click a card to open it in Linear.
+- Read-only: nothing is ever written back to Linear.
+- Multi-user: each person signs in with a magic link and connects their own
+  workspaces. API keys are encrypted at rest and never sent to the browser.
+- Optional Stripe subscriptions (free trial → paid) for running it as a hosted
+  service. Off by default, so self-hosted installs are fully unlocked.
 
-- One tab per workspace (organization) across the top.
-- Per workspace, pick a team and see its issues in a Linear-style Kanban board,
-  columns ordered Triage → Backlog → Todo → In Progress → Done.
-- Cards show identifier, priority, labels, and assignee; click a card to open it
-  in Linear.
+## Self-hosting
 
-> **Website:** the marketing page lives at
-> **[linearmultiboard.bhavikmistry.com](https://linearmultiboard.bhavikmistry.com)**
-> (source in [`landing/`](landing/), hosted on AWS Amplify).
+You need Docker with Compose.
+
+```bash
+git clone https://github.com/mistryb/linear-multiboard.git
+cd linear-multiboard
+cp .env.example .env
+```
+
+Edit `.env`:
+
+| Variable | |
+| --- | --- |
+| `APP_URL` | Public URL you'll serve it at, e.g. `https://board.example.com` (or `http://localhost:3000`). |
+| `ENCRYPTION_KEY` | `openssl rand -hex 32`. Encrypts stored Linear keys. Back it up: if it's lost, workspaces must be re-added. |
+| `SMTP_URL`, `MAIL_FROM` | For emailing sign-in links. Leave blank to print links to the server log (`docker compose logs app`). This is fine for a single user. |
+| `ALLOWED_EMAILS` | Comma-separated emails / `@domains` allowed to sign in. **Set this** on an internet-facing instance, e.g. `@yourcompany.com`. |
+| `POSTGRES_PASSWORD` | Optional; change from the default if the database port is reachable. |
+
+Leave the `STRIPE_*` variables blank to turn billing off.
+
+```bash
+docker compose up -d
+```
+
+Open `APP_URL`, sign in with your email, and connect workspaces under
+**Settings**. With billing off, `/` goes straight to the app at `/app`. The
+marketing page is only shown on instances that sell subscriptions. Put it behind a TLS-terminating reverse proxy (Caddy, nginx,
+Traefik, a cloud load balancer) for anything beyond localhost. Session cookies
+are marked `Secure` automatically when `APP_URL` is `https://`.
+
+**Without Docker:** use Node 20.6+ and Postgres 14+, set the same variables plus
+`DATABASE_URL`, then `npm ci && npm run build && npm start`. Database migrations
+run automatically on boot. `GET /healthz` is a health check.
+
+## Running it as a paid service
+
+Set the Stripe variables to turn billing on:
+
+1. In Stripe, create a Product with a recurring monthly Price and, optionally, a
+   discounted yearly Price. Copy their IDs to `STRIPE_PRICE_MONTHLY` and
+   `STRIPE_PRICE_ANNUAL`. The app reads the amounts from Stripe, so prices are
+   never duplicated in config. Restart the app after changing them.
+2. Add a webhook endpoint at `https://<APP_URL>/api/billing/webhook` listening for
+   `customer.subscription.created`, `customer.subscription.updated` and
+   `customer.subscription.deleted`. Copy its signing secret to
+   `STRIPE_WEBHOOK_SECRET`.
+3. Set `STRIPE_SECRET_KEY`, and configure the Customer Portal (used for **Manage
+   billing**) to allow cancelling, updating payment methods, and switching
+   between the monthly and yearly prices.
+
+The marketing page (`index.html`) lists prices as static text. Update it if you
+change them in Stripe.
+
+New accounts get a `TRIAL_DAYS` (default 14) free trial with no card. After it
+ends, the board is replaced by a Subscribe screen until the account has an
+`active`, `trialing` or `past_due` subscription. Connected workspaces are kept,
+so subscribing restores the board immediately.
+
+To test locally: `stripe listen --forward-to localhost:3000/api/billing/webhook`.
 
 ## How it works
 
-Linear settings — including personal API keys — are scoped to a **single
-workspace**. So to show several workspaces you create one personal API key in
-**each** workspace and list them in `public/linear.config.json`. On load the app
-resolves each key to its organization and renders it as its own tab.
-
-Because Linear's GraphQL endpoint doesn't send permissive CORS headers to
-arbitrary origins, the Vite dev server proxies `/graphql` to `api.linear.app`
-(see `vite.config.ts`). This is why the app is meant to be run via `npm run dev`
-— there's still no backend of our own.
-
-## Setup
-
-### 1. Create a personal API key in each workspace
-
-In Linear, switch to a workspace and go to **Settings → Security & access →
-Personal API keys** (https://linear.app/settings/account/security) and create a
-key. Repeat in every workspace you want to see. A key grants access to the one
-workspace it was created in.
-
-### 2. Configure the app
-
-```bash
-cp public/linear.config.example.json public/linear.config.json
+```
+browser ──(session cookie)──▶ Node server (Hono) ──(per-workspace API key)──▶ api.linear.app
+                                    │
+                                 Postgres: users, sessions, encrypted keys, last-fetched board
 ```
 
-Edit `public/linear.config.json` — one entry per workspace:
+Linear personal API keys are scoped to a **single workspace**, so each user
+creates one key per workspace (**Settings → Security & access → Personal API
+keys** in Linear) and pastes it into MultiBoard's Settings. The server verifies
+the key, stores it AES-256-GCM encrypted, and uses it server-side to fetch
+active issues. Every query is scoped to the signed-in user, which is the tenant
+boundary.
 
-```json
-{
-  "workspaces": [
-    { "label": "Acme",  "apiKey": "lin_api_xxxxxxxxxxxx" },
-    { "label": "Beta Co", "apiKey": "lin_api_yyyyyyyyyyyy" }
-  ]
-}
-```
+The last-fetched board is cached per user, so the page paints instantly and then
+refreshes from Linear. Boards fetch up to 200 active (non-done, non-canceled)
+issues per workspace, plus up to 10 labels per card. These page sizes are kept
+modest to stay under Linear's GraphQL complexity limit.
 
-`label` is optional (it only names a key in error messages — the real workspace
-name is fetched from Linear). `public/linear.config.json` is git-ignored so your
-keys never get committed.
-
-### 3. Run
+## Development
 
 ```bash
+cp .env.example .env              # then set ENCRYPTION_KEY (openssl rand -hex 32)
+docker compose up -d db           # Postgres on localhost:5432
 npm install
-npm run dev
+npm run dev                       # API on :3000 + Vite UI on :5173 (proxies /api)
 ```
 
-Open http://localhost:5173. Each workspace appears as a tab. After editing the
-JSON, click **Reload config** (or refresh the page) to pick up changes.
-
-## Notes
-
-- Boards fetch up to 150 active (non-canceled) issues per team, plus up to 10
-  labels per card — page sizes kept modest to stay under Linear's GraphQL
-  query-complexity limit. Use **Refresh** to re-pull from the API.
-- Nothing is written back to Linear — this is a read-only viewer.
-- `npm run build` produces a static bundle, but the dev-server proxy won't exist
-  there; if you deploy it, front it with an equivalent proxy for `/graphql` →
-  `https://api.linear.app`, and note that `public/linear.config.json` would be
-  served publicly — don't deploy it with real keys.
+Open http://localhost:5173 for the marketing page, or http://localhost:5173/app
+for the app. With `SMTP_URL` blank, the sign-in link is printed
+in the `server` output. `npm run typecheck` checks the client and server;
+`npm run build` produces `dist/` (UI) and `build/` (server).
 
 ## Project layout
 
 ```
-public/
-  linear.config.example.json   template — copy to linear.config.json
-  linear.config.json           your API keys (git-ignored)
+server/
+  index.ts       Hono app: security headers, CSRF, routes, serves dist/ in production
+  env.ts         environment config (validated at boot)
+  db.ts          Postgres client + migration runner (server/migrations/*.sql)
+  auth.ts        magic-link sign-in, sessions
+  boards.ts      workspaces CRUD + issue fetching (all scoped per user)
+  billing.ts     Stripe checkout, portal, webhook, access gate
+  linear.ts      Linear GraphQL client
+  crypto.ts      API-key encryption, token hashing
+shared/types.ts  types shared by server and UI
 src/
-  linear/
-    config.ts    loads + validates public/linear.config.json
-    api.ts       GraphQL client + queries (org, teams, states, issues)
-    types.ts     API + config types
-  components/
-    App is in src/App.tsx (workspace tabs + orchestration)
-    WorkspaceBoard.tsx   team picker + board for one workspace
-    Board.tsx            columns grouped by workflow state
-    IssueCard.tsx        a single issue card
-    SetupScreen.tsx      first-run instructions when no config exists
+  App.tsx        auth routing, workspace tabs, settings, paywall
+  api.ts         browser → server client
+  components/    IssueBoard, IssueCard, LoginScreen, SettingsScreen, Paywall
+  hooks/         useAllIssues (cache-first, then refresh)
+index.html       marketing page, served at / (plain HTML + inline CSS)
+app/index.html   app entry, served at /app
+public/          favicon + social image shared by both pages
+Dockerfile, docker-compose.yml, .env.example
 ```
 
 ## License

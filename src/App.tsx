@@ -1,102 +1,123 @@
-import { useEffect, useState } from 'react'
-import type { Workspace } from './linear/types'
-import { ConfigMissingError, loadConfig } from './linear/config'
-import { fetchOrganization } from './linear/api'
+import { useCallback, useEffect, useState } from 'react'
+import type { Me, Workspace } from '../shared/types'
+import { api, ApiError } from './api'
 import { useAllIssues } from './hooks/useAllIssues'
-import { SetupScreen } from './components/SetupScreen'
 import { IssueBoard } from './components/IssueBoard'
+import { LoginScreen, VerifyScreen } from './components/LoginScreen'
+import { SettingsScreen } from './components/SettingsScreen'
+import { Paywall } from './components/Paywall'
 
-// The "All Issues" board tab uses this sentinel instead of an org id.
-const ALL_TAB = 'all'
+// Top-level router: magic-link landing page, sign-in, or the signed-in app.
+export function Root() {
+  const [me, setMe] = useState<Me | null | undefined>(undefined) // undefined = loading
+  const [error, setError] = useState<string | null>(null)
+  const verifyToken =
+    window.location.pathname === '/app/auth/verify'
+      ? new URLSearchParams(window.location.search).get('token')
+      : null
 
-interface LoadError {
-  label: string
-  message: string
-}
-
-export function App() {
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([])
-  const [activeTab, setActiveTab] = useState<string>(ALL_TAB)
-  const [busy, setBusy] = useState(true)
-  const [loadErrors, setLoadErrors] = useState<LoadError[]>([])
-  const [setupHint, setSetupHint] = useState<string | null>(null)
-  const [reloadKey, setReloadKey] = useState(0)
-
-  // Read public/linear.config.json and resolve each API key to its workspace.
-  useEffect(() => {
-    let alive = true
-    setBusy(true)
-    setSetupHint(null)
-    ;(async () => {
-      try {
-        const entries = await loadConfig()
-        if (!alive) return
-        if (entries.length === 0) {
-          setSetupHint(null)
-          setWorkspaces([])
-          return
-        }
-
-        const loaded: Workspace[] = []
-        const errors: LoadError[] = []
-        // Sequential is fine — you have a handful of workspaces, not hundreds.
-        for (const entry of entries) {
-          const label = entry.label ?? `key …${entry.apiKey.slice(-6)}`
-          try {
-            const organization = await fetchOrganization(entry.apiKey)
-            loaded.push({ apiKey: entry.apiKey, label: entry.label, organization })
-          } catch (e) {
-            errors.push({ label, message: String((e as Error).message ?? e) })
-          }
-        }
-        if (!alive) return
-        setWorkspaces(loaded)
-        setLoadErrors(errors)
-      } catch (e) {
-        if (!alive) return
-        if (e instanceof ConfigMissingError) {
-          setWorkspaces([])
-          setSetupHint(null)
-        } else {
-          setWorkspaces([])
-          setSetupHint(String((e as Error).message ?? e))
-        }
-      } finally {
-        if (alive) setBusy(false)
-      }
-    })()
-    return () => {
-      alive = false
+  const loadMe = useCallback(async () => {
+    try {
+      setMe(await api.me())
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) setMe(null)
+      else setError(String((e as Error).message ?? e))
     }
-  }, [reloadKey])
+  }, [])
 
-  // If the selected workspace tab vanished after a config reload, fall back to All.
   useEffect(() => {
-    if (activeTab !== ALL_TAB && !workspaces.some((w) => w.organization.id === activeTab)) {
-      setActiveTab(ALL_TAB)
-    }
-  }, [workspaces, activeTab])
+    if (!verifyToken) void loadMe()
+  }, [verifyToken, loadMe])
 
-  // All issues from every workspace, loaded once. Each board filters this.
-  const { issues, loading, errors, lastRefreshed, refresh } = useAllIssues(workspaces)
-
-  const active = workspaces.find((w) => w.organization.id === activeTab) ?? null
-  const boardIssues =
-    activeTab === ALL_TAB ? issues : issues.filter((i) => i.workspaceId === activeTab)
-  const boardErrors =
-    activeTab === ALL_TAB || !active
-      ? errors
-      : errors.filter((e) => e.startsWith(`${active.organization.name}:`))
-
-  if (busy) {
+  if (verifyToken) {
+    return <VerifyScreen token={verifyToken} onSignedIn={() => window.location.replace('/app')} />
+  }
+  if (error) {
     return (
       <div className="app">
         <div className="center">
-          <div className="spinner" />
+          <p className="form-error">{error}</p>
         </div>
       </div>
     )
   }
+  if (me === undefined) return <Loading />
+  if (me === null) return <LoginScreen />
+  return <App me={me} onMeChanged={loadMe} />
+}
+
+function Loading() {
+  return (
+    <div className="app">
+      <div className="center">
+        <div className="spinner" />
+      </div>
+    </div>
+  )
+}
+
+// Tab sentinels: the combined board and the settings page (others are org ids).
+const ALL_TAB = 'all'
+const SETTINGS_TAB = 'settings'
+
+function App({ me, onMeChanged }: { me: Me; onMeChanged: () => void }) {
+  const [workspaces, setWorkspaces] = useState<Workspace[] | null>(null)
+  const [activeTab, setActiveTab] = useState<string>(ALL_TAB)
+  const [loadError, setLoadError] = useState<string | null>(null)
+
+  const loadWorkspaces = useCallback(async () => {
+    try {
+      setWorkspaces(await api.workspaces())
+      setLoadError(null)
+    } catch (e) {
+      setLoadError(String((e as Error).message ?? e))
+      setWorkspaces((w) => w ?? [])
+    }
+  }, [])
+
+  useEffect(() => {
+    void loadWorkspaces()
+  }, [loadWorkspaces])
+
+  // Returning from Stripe Checkout: the webhook may land a moment after the
+  // redirect, so re-read the account once more shortly after.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (!params.has('billing')) return
+    window.history.replaceState(null, '', '/app')
+    const t = setTimeout(onMeChanged, 2500)
+    return () => clearTimeout(t)
+  }, [onMeChanged])
+
+  // If the selected workspace tab vanished (e.g. disconnected), fall back to All.
+  useEffect(() => {
+    if (
+      workspaces &&
+      activeTab !== ALL_TAB &&
+      activeTab !== SETTINGS_TAB &&
+      !workspaces.some((w) => w.organization.id === activeTab)
+    ) {
+      setActiveTab(ALL_TAB)
+    }
+  }, [workspaces, activeTab])
+
+  // Only fetch issues for accounts that can see the board.
+  const boardWorkspaces = me.billing.hasAccess ? workspaces : null
+  const { issues, loading, errors, lastRefreshed, refresh } = useAllIssues(boardWorkspaces ?? NO_WORKSPACES)
+
+  if (workspaces === null) return <Loading />
+
+  async function signOut() {
+    await api.logout().catch(() => {})
+    window.location.replace('/app')
+  }
+
+  const active = workspaces.find((w) => w.organization.id === activeTab) ?? null
+  const boardIssues = activeTab === ALL_TAB ? issues : issues.filter((i) => i.workspaceId === activeTab)
+  const boardErrors =
+    activeTab === ALL_TAB || !active ? errors : errors.filter((e) => e.startsWith(`${active.organization.name}:`))
+  // No workspaces yet → settings doubles as onboarding.
+  const showSettings = activeTab === SETTINGS_TAB || workspaces.length === 0
 
   return (
     <div className="app">
@@ -135,29 +156,28 @@ export function App() {
         </div>
 
         <button
-          className="btn btn-ghost"
-          onClick={() => setReloadKey((k) => k + 1)}
-          title="Re-read public/linear.config.json"
+          className={`btn btn-ghost ${showSettings ? 'active' : ''}`}
+          onClick={() => setActiveTab(SETTINGS_TAB)}
         >
-          Reload config
+          Settings
+        </button>
+        <button className="btn btn-ghost" onClick={signOut} title={`Signed in as ${me.email}`}>
+          Sign out
         </button>
       </div>
 
-      {loadErrors.length > 0 && (
+      <TrialBanner me={me} onUpgrade={() => setActiveTab(SETTINGS_TAB)} />
+
+      {loadError && (
         <div className="error-banner">
-          <span>
-            Couldn&apos;t load {loadErrors.length} workspace
-            {loadErrors.length > 1 ? 's' : ''}:{' '}
-            {loadErrors.map((e) => `${e.label} (${e.message})`).join('; ')}
-          </span>
-          <button className="btn" onClick={() => setLoadErrors([])}>
-            Dismiss
-          </button>
+          <span>{loadError}</span>
         </div>
       )}
 
-      {workspaces.length === 0 ? (
-        <SetupScreen detail={setupHint ?? undefined} />
+      {showSettings ? (
+        <SettingsScreen me={me} workspaces={workspaces} onChanged={loadWorkspaces} />
+      ) : !me.billing.hasAccess ? (
+        <Paywall plans={me.billing.plans} />
       ) : activeTab === ALL_TAB ? (
         <IssueBoard
           title="All workspaces · active issues"
@@ -179,6 +199,26 @@ export function App() {
           showWorkspace={false}
         />
       ) : null}
+    </div>
+  )
+}
+
+const NO_WORKSPACES: Workspace[] = []
+
+function TrialBanner({ me, onUpgrade }: { me: Me; onUpgrade: () => void }) {
+  const { enabled, status, trialEndsAt, hasAccess } = me.billing
+  if (!enabled || !hasAccess || status === 'active' || status === 'trialing' || !trialEndsAt) return null
+  const days = Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86_400_000)
+  return (
+    <div className="info-banner">
+      <span>
+        {status === 'past_due'
+          ? 'Your last payment failed — update your card to keep access.'
+          : `Free trial: ${days} day${days === 1 ? '' : 's'} left.`}
+      </span>
+      <button className="btn" onClick={onUpgrade}>
+        {status === 'past_due' ? 'Update billing' : 'Subscribe'}
+      </button>
     </div>
   )
 }

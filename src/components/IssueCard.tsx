@@ -1,4 +1,4 @@
-import type { Issue } from '../linear/types'
+import type { Issue } from '../../shared/types'
 
 function initials(name: string): string {
   return name
